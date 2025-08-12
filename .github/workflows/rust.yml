@@ -1,20 +1,56 @@
-name: Rust Compile Check
+# .github/workflows/rust.yml
+# An autograding workflow that checks if the Rust code compiles
+# and reports a score back to GitHub Classroom.
+
+name: Autograding Compile Check
 
 on:
-    push:
-        branches: [ "trunk" ]
-    pull_request:
-        branches: [ "trunk" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 env:
-    CARGO_TERM_COLOR: always
+  CARGO_TERM_COLOR: always
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  # Define the autograding job
+  autograding:
+    runs-on: ubuntu-latest
+    
+    # This is a special keyword that GitHub Classroom looks for.
+    # It allows the job's results to be surfaced in the Classroom UI.
+    permissions:
+      contents: read
+      actions: write
+      checks: write
+      
+    steps:
+    # Step 1: Check out the student's code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-        steps:
-        - uses: actions/checkout@v3
+    # Step 2: Run the autograding command grader
+    # This action will execute our compile check and award points if it succeeds.
+    - name: Check if code compiles
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        # A name for the test that will appear in the grading UI.
+        test-name: 'Compile Check'
+        
+        # The command to run. `cargo check` will exit with a 0 code (success)
+        # if the code compiles, and a non-zero code (failure) if it doesn't.
+        command: 'cargo check --verbose'
+        
+        # The maximum number of points this test is worth.
+        # You can adjust this value based on your grading scheme.
+        max-score: '28'
+        
+        # The maximum time to allow the command to run.
+        # The default of 10 minutes is plenty for a compile check.
+        timeout: '10'
 
-        - name: Check if code compiles
-          run: cargo check --verbose
+    # Step 3: Post the results back to GitHub Classroom
+    # This standard step is required to make the scores visible.
+    - name: Autograding Reporter
+      uses: education/autograding-reporter@v1
